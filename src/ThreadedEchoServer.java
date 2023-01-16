@@ -13,20 +13,30 @@ class ThreadedEchoHandler extends Thread {
         try {
             System.out.println("Connection successful");
             System.out.println("Waiting for input.....");
-            PrintWriter out = new PrintWriter(clientSocket.getOutputStream(),
-                    true);
-            BufferedReader in = new BufferedReader(
-                    new InputStreamReader(clientSocket.getInputStream()));
-            String inputLine;
-            while ((inputLine = in.readLine()) != null) {
-                System.out.println("Server: " + inputLine);
-                out.println(inputLine);
+            DataOutputStream outToClient = new DataOutputStream(this.clientSocket.getOutputStream());
+            String fileName = "testVideo.mp4";
+            File file = new File(fileName);
+            int numOfBytes = (int) file.length();
+            InputStream inputStream = new FileInputStream(file);
 
-                if (inputLine.equals("Bye."))
-                    break;
+            outToClient.writeBytes("HTTP/1.1 200 OK\r\n");
+            outToClient.writeBytes("Content-Type: video/mp4\r\n");
+            outToClient.writeBytes("Transfer-Encoding: chunked");
+            outToClient.writeBytes("Content-Length: " + numOfBytes + "\r\n");
+            outToClient.writeBytes("\r\n");
+
+            System.out.println("reached before transferring");
+            byte[] buffer = new byte[8 * 1024];
+            int bytesRead;
+            int count = 0;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                outToClient.write(buffer, 0, bytesRead);
+                count++;
             }
-            out.close();
-            in.close();
+            System.out.println("Transfer completed");
+            System.out.println(numOfBytes);
+            System.out.println(count + "chunks transferred");
+            inputStream.close();
             clientSocket.close();
         } catch (Exception e) {
             System.err.println("Exception caught: Client Disconnected.");

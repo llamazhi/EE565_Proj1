@@ -33,12 +33,7 @@ public class EchoServerVideoTest {
                 System.out.println("Transfer completed");
                 System.out.println(numOfBytes);
                 System.out.println(count + "chunks transferred");
-                try {
-                    inputStream.close();
-                } catch (IOException ioex) {
-                    System.err.println("Close stream failed.");
-                    System.err.println(ioex);
-                }
+                inputStream.close();
             }
 
         } catch (IOException e) {
