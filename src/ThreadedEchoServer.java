@@ -2,9 +2,9 @@ import java.net.*;
 import java.io.*; 
 import java.lang.Thread;
 
-class EchoHandler extends Thread{
+class ThreadedEchoHandler extends Thread{
     Socket clientSocket;
-    EchoHandler (Socket clientSocket){
+    ThreadedEchoHandler (Socket clientSocket){
         this.clientSocket=clientSocket;
     }
     public void run(){
@@ -66,7 +66,7 @@ public class ThreadedEchoServer
     try { 
             while(true){
                 Socket clientSocket = serverSocket.accept(); 
-                EchoHandler handler=new EchoHandler(clientSocket);
+                ThreadedEchoHandler handler=new ThreadedEchoHandler(clientSocket);
                 handler.start();
             }
         } 
