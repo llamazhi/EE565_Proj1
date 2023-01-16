@@ -53,7 +53,7 @@ public class EchoHandler extends Thread {
             }
             out.close();
             in.close();
-
+            inFile.close();
             clientSocket.close();
         } catch (Exception e) {
             System.err.println("Exception caught: Client Disconnected.");
