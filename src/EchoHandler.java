@@ -1,25 +1,27 @@
-import java.net.*; 
-import java.io.*; 
+import java.net.*;
+import java.io.*;
 import java.lang.Thread;
 
-public class EchoHandler extends Thread{
+public class EchoHandler extends Thread {
     Socket clientSocket;
-    EchoHandler (Socket clientSocket){
-        this.clientSocket=clientSocket;
+
+    EchoHandler(Socket clientSocket) {
+        this.clientSocket = clientSocket;
     }
+
     @Override
-    public void run(){
-        try{
-            System.out.println ("Connection successful");
-            System.out.println ("Waiting for input.....");
+    public void run() {
+        try {
+            System.out.println("Connection successful");
+            System.out.println("Waiting for input.....");
 
             // TODO: Read the picture file into bytes
             DataOutputStream outToClient = new DataOutputStream(clientSocket.getOutputStream());
-            String fileName = "C://study/ee565/project1/Project1_565/src/Husky.jpg";
+            String fileName = "Husky.jpg";
             File file = new File(fileName);
             int numOfBytes = (int) file.length();
 
-            FileInputStream inFile  = new FileInputStream(fileName);
+            FileInputStream inFile = new FileInputStream(fileName);
 
             byte[] fileInBytes = new byte[numOfBytes];
             inFile.read(fileInBytes);
@@ -36,33 +38,31 @@ public class EchoHandler extends Thread{
 
             outToClient.write(fileInBytes, 0, numOfBytes);
 
-
             // original starter code starts here
             PrintWriter out = new PrintWriter(clientSocket.getOutputStream(),
-                                      true);
+                    true);
             BufferedReader in = new BufferedReader(
-                new InputStreamReader( clientSocket.getInputStream()));
+                    new InputStreamReader(clientSocket.getInputStream()));
             String inputLine;
-            while ((inputLine = in.readLine()) != null)
-            {
-            System.out.println ("Server: " + inputLine);
-            out.println(inputLine);
+            while ((inputLine = in.readLine()) != null) {
+                System.out.println("Server: " + inputLine);
+                out.println(inputLine);
 
-            if (inputLine.equals("Bye."))
-                break;
+                if (inputLine.equals("Bye."))
+                    break;
             }
             out.close();
             in.close();
 
             clientSocket.close();
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             System.err.println("Exception caught: Client Disconnected.");
-        }
-        finally{
-            try{clientSocket.close();}
-            catch(Exception e){;}
+        } finally {
+            try {
+                clientSocket.close();
+            } catch (Exception e) {
+                ;
+            }
         }
     }
 }
-

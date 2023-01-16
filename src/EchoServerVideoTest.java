@@ -1,11 +1,11 @@
 import java.net.*;
 import java.io.*;
-import java.util.*;
+
 public class EchoServerVideoTest {
     public static void main(String args[]) throws IOException {
         ServerSocket server = new ServerSocket(8080);
         System.out.println("Listening for connection on port 8080 ....");
-        try  {
+        try {
             while (true) {
                 Socket socket = server.accept();
 
@@ -26,17 +26,22 @@ public class EchoServerVideoTest {
                 byte[] buffer = new byte[8 * 1024];
                 int bytesRead;
                 int count = 0;
-                while((bytesRead = inputStream.read(buffer)) !=-1) {
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
                     outToClient.write(buffer, 0, bytesRead);
-                    count ++;
+                    count++;
                 }
                 System.out.println("Transfer completed");
                 System.out.println(numOfBytes);
                 System.out.println(count + "chunks transferred");
+                try {
+                    inputStream.close();
+                } catch (IOException ioex) {
+                    System.err.println("Close stream failed.");
+                    System.err.println(ioex);
+                }
             }
 
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             System.err.println("Accept failed.");
             System.err.println(e);
         }
