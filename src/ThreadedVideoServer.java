@@ -50,7 +50,7 @@ class ThreadedEchoHandler extends Thread {
     }
 }
 
-public class ThreadedEchoServer {
+public class ThreadedVideoServer {
 
     public static void main(String[] args) throws IOException {
         ServerSocket serverSocket = null;
