@@ -11,7 +11,7 @@ public class EchoServerVideoTest {
 
                 // TODO: read the video and transfer to the client
                 DataOutputStream outToClient = new DataOutputStream(socket.getOutputStream());
-                String fileName = "C:/study/ee565/project1/Project1_565/src/testVideo.mp4";
+                String fileName = "testVideo.mp4";
                 File file = new File(fileName);
                 int numOfBytes = (int) file.length();
                 InputStream inputStream = new FileInputStream(file);
