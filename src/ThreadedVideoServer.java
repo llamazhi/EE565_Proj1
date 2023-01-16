@@ -13,31 +13,35 @@ class ThreadedEchoHandler extends Thread {
         try {
             System.out.println("Connection successful");
             System.out.println("Waiting for input.....");
-            DataOutputStream outToClient = new DataOutputStream(this.clientSocket.getOutputStream());
-            String fileName = "src/testVideo.mp4";
-            File file = new File(fileName);
-            int numOfBytes = (int) file.length();
-            InputStream inputStream = new FileInputStream(file);
 
-            outToClient.writeBytes("HTTP/1.1 200 OK\r\n");
-            outToClient.writeBytes("Content-Type: video/mp4\r\n");
-            outToClient.writeBytes("Transfer-Encoding: chunked");
-            outToClient.writeBytes("Content-Length: " + numOfBytes + "\r\n");
-            outToClient.writeBytes("\r\n");
+            while (true) {
+                DataOutputStream outToClient = new DataOutputStream(this.clientSocket.getOutputStream());
+                String fileName = "src/testVideo.mp4";
+                File file = new File(fileName);
+                int numOfBytes = (int) file.length();
+                InputStream inputStream = new FileInputStream(file);
 
-            System.out.println("reached before transferring");
-            byte[] buffer = new byte[8 * 1024];
-            int bytesRead;
-            int count = 0;
-            while ((bytesRead = inputStream.read(buffer)) != -1) {
-                outToClient.write(buffer, 0, bytesRead);
-                count++;
-            }
-            System.out.println("Transfer completed");
-            System.out.println(numOfBytes);
-            System.out.println(count + "chunks transferred");
-            inputStream.close();
+                outToClient.writeBytes("HTTP/1.1 200 OK\r\n");
+                outToClient.writeBytes("Content-Type: video/mp4\r\n");
+                outToClient.writeBytes("Transfer-Encoding: chunked");
+                outToClient.writeBytes("Content-Length: " + numOfBytes + "\r\n");
+                outToClient.writeBytes("\r\n");
+
+                System.out.println("reached before transferring");
+                byte[] buffer = new byte[8 * 1024];
+                int bytesRead;
+                int count = 0;
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    outToClient.write(buffer, 0, bytesRead);
+                    count++;
+                }
+                System.out.println("Transfer completed");
+                System.out.println(numOfBytes);
+                System.out.println(count + "chunks transferred");
+                inputStream.close();
 //            clientSocket.close();
+            }
+
         } catch (Exception e) {
             System.err.println("Exception caught: Client Disconnected.");
         } finally {
