@@ -1,5 +1,6 @@
 import java.net.*;
 import java.io.*;
+import java.util.Arrays;
 
 public class EchoServerVideoTest {
     public static void main(String args[]) throws IOException {
@@ -18,21 +19,17 @@ public class EchoServerVideoTest {
 
                 outToClient.writeBytes("HTTP/1.1 200 OK\r\n");
                 outToClient.writeBytes("Content-Type: video/mp4\r\n");
-                outToClient.writeBytes("Transfer-Encoding: chunked");
+                outToClient.writeBytes("Transfer-Encoding: chunked\r\n");
                 outToClient.writeBytes("Content-Length: " + numOfBytes + "\r\n");
                 outToClient.writeBytes("\r\n");
 
                 System.out.println("reached before transferring");
                 byte[] buffer = new byte[8 * 1024];
                 int bytesRead;
-                int count = 0;
                 while ((bytesRead = inputStream.read(buffer)) != -1) {
+//                    System.out.println(Arrays.toString(buffer));
                     outToClient.write(buffer, 0, bytesRead);
-                    count++;
                 }
-                System.out.println("Transfer completed");
-                System.out.println(numOfBytes);
-                System.out.println(count + "chunks transferred");
                 inputStream.close();
             }
 

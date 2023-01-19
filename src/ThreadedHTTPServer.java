@@ -19,9 +19,11 @@ public class ThreadedHTTPServer extends Thread {
 
                 ThreadedHTTPWorker workerThread = new ThreadedHTTPWorker(client);
                 workerThread.start();
+                System.out.println("New worker thread built");
             }
         }
         catch (IOException e) {
+            System.out.println("Failed to connect");
             e.printStackTrace();
         }
         finally {
@@ -29,7 +31,9 @@ public class ThreadedHTTPServer extends Thread {
                 try {
                     server.close();
                 }
-                catch (IOException e) {}
+                catch (IOException e) {
+                    System.out.println("Server closed accidentally");
+                }
             }
         }
     }
