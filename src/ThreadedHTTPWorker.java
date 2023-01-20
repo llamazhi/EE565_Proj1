@@ -92,11 +92,27 @@ public class ThreadedHTTPWorker extends Thread {
             else {
                 String path = "src/testVideo.mp4";
                 File f = new File(path);
+
                 String MIMEType = categorizeFile(path);
 //                System.out.println(MIMEType);
+
                 // check if it is a partial content request
-                if(req.contains("Range:")) {
-//                    sendParitialContent();
+                if(req.contains("Range: ")) {
+                    String[] lines =  req.split("\r\n");
+                    int start = 0;
+                    int end = 0;
+                    for (String l : lines) {
+                        // check if the line contains "Range: " field
+                        if (l.contains("Range: bytes=")) {
+                            int len = "Range: bytes=".length();
+                            String range = l.substring(len);
+                            String startNum = range.split("-")[0];
+                            String endNum = range.split("-")[1];
+                            start = Integer.parseInt(startNum);
+                            end = Integer.parseInt(endNum);
+                        }
+                    }
+                    sendParitialContent(MIMEType, start, end, f);
                     System.out.println("Partial content request detected");
                 }
                 else {
@@ -122,22 +138,47 @@ public class ThreadedHTTPWorker extends Thread {
         }
     }
 
-    private void sendParitialContent(String fileType) {
-        String partialResonse = "HTTP/1.1 206 Partial Content" + this.CRLF;
-        //                    "Content-Type: video/mp4" + CRLF +
-//                    "Transfer-Encoding: chunked" + CRLF +
-//                    "Last-Modified: " + dateInfo + " GMT" + CRLF +
-//                    CRLF;
+    private void sendParitialContent(String MIMEType, int rangeStart, int rangeEnd, File f) {
+        try {
+            String date = getDateInfo();
+            long fileSize = f.length();
+            int actualLength = rangeEnd - rangeStart + 1;
+            String partialResonse = "HTTP/1.1 206 Partial Content" + this.CRLF +
+                                "Content-Type: " + MIMEType + this.CRLF +
+                                "Content-Length: " + actualLength + this.CRLF +
+                                "Date: " + date + this.CRLF +
+                                "Content-Range: bytes " + rangeStart + "-" + rangeEnd + "/" + fileSize + this.CRLF +
+                                this.CRLF;
+            this.outputStream.writeBytes(partialResonse);
+            sendPartialFile(f, rangeStart, rangeEnd);
 
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void sendPartialFile(File f, int rangeStart, int readLen) {
+        try {
+            FileInputStream fileInputStream
+                    = new FileInputStream(f);
+            byte[] buffer = new byte[readLen];
+            fileInputStream.read(buffer, rangeStart, readLen);
+            this.outputStream.write(buffer, 0, readLen);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void sendFullContent(String MIMEType, String path) {
         try {
-
+            String date = getDateInfo();
             String dateInfo = getDateInfo();
             String response = "HTTP/1.1 200 OK" + this.CRLF +
                     "Content-Type: " + MIMEType + this.CRLF +
                     "Transfer-Encoding: chunked" + this.CRLF +
+                    "Date: " + date + this.CRLF +
                     "Last-Modified: " + dateInfo + " GMT" + this.CRLF +
                     this.CRLF;
 
