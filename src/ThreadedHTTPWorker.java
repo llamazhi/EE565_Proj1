@@ -9,7 +9,6 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Set;
 
 // ThreadedHTTPWorker class is responsible for all the
 // actual string & data transfer
@@ -86,8 +85,11 @@ public class ThreadedHTTPWorker extends Thread {
             String relativeURL = header.substring(5); // remove GET / at this version
 //            System.out.println("relativeURL: " + relativeURL);
 //            System.out.println(relativeURL.length());
-            if (Arrays.asList(acceptableFiles).contains(relativeURL)) {
-                String path = "src/Content/test." + relativeURL;
+            String extension = relativeURL.substring(5);
+//            System.out.println("extension: " + extension);
+
+            if (Arrays.asList(acceptableFiles).contains(extension)) {
+                String path = "src/Content/" + relativeURL;
                 System.out.println("Current file path: " + path);
                 File f = new File(path);
 
@@ -185,7 +187,7 @@ public class ThreadedHTTPWorker extends Thread {
                     "Date: " + date + this.CRLF +
                     "Last-Modified: " + dateInfo + " GMT" + this.CRLF +
                     this.CRLF;
-            System.out.println(response);
+//            System.out.println(response);
             this.outputStream.writeBytes(response);
             System.out.println("Response header sent ... ");
             sendFileInChunk(path);
