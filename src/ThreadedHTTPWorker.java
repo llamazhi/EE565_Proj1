@@ -6,8 +6,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Set;
 
 // ThreadedHTTPWorker class is responsible for all the
 // actual string & data transfer
@@ -40,9 +42,8 @@ public class ThreadedHTTPWorker extends Thread {
                 }
             }
             System.out.println("Converted request to String ...");
-            System.out.println(req);
+//            System.out.println(req);
 
-            // TODO: Parse the request
             parseRequest(req, this.outputStream);
         }
         catch (IOException e) {
@@ -77,20 +78,17 @@ public class ThreadedHTTPWorker extends Thread {
     private void parseRequest(String req, DataOutputStream out) {
         System.out.println("Begin to parse request ... ");
         try {
+            String[] acceptableFiles = {"txt", "css", "html", "gif", "jpg", "png", "js",
+                    "mp4", "webm", "ogg"};
             int pageURLIndex = 0;
             pageURLIndex = req.indexOf("HTTP");
-            String header = req.substring(0, pageURLIndex); // remove HTTP/1.1 or HTTP/1.0
-            String relativeURL = header.substring(4); // remove GET at this version
-            System.out.println("relativeURL: " + relativeURL);
-
-            if (!relativeURL.equals("/ ")) {
-                String errorResponse = "HTTP/1.1 404 Bad Request" + CRLF
-                        + CRLF;
-                out.writeBytes(errorResponse);
-                System.out.println("Error Page Found");
-            }
-            else {
-                String path = "src/testVideo.mp4";
+            String header = req.substring(0, pageURLIndex - 1); // remove HTTP/1.1 or HTTP/1.0
+            String relativeURL = header.substring(5); // remove GET / at this version
+//            System.out.println("relativeURL: " + relativeURL);
+//            System.out.println(relativeURL.length());
+            if (Arrays.asList(acceptableFiles).contains(relativeURL)) {
+                String path = "src/Content/test." + relativeURL;
+                System.out.println("Current file path: " + path);
                 File f = new File(path);
 
                 String MIMEType = categorizeFile(path);
@@ -120,6 +118,12 @@ public class ThreadedHTTPWorker extends Thread {
                     System.out.println("Full content request detected");
                 }
             }
+            else {
+                String errorResponse = "HTTP/1.1 404 Bad Request" + CRLF + CRLF;
+                out.writeBytes(errorResponse);
+                System.out.println("Error Page Found");
+            }
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -181,7 +185,7 @@ public class ThreadedHTTPWorker extends Thread {
                     "Date: " + date + this.CRLF +
                     "Last-Modified: " + dateInfo + " GMT" + this.CRLF +
                     this.CRLF;
-
+            System.out.println(response);
             this.outputStream.writeBytes(response);
             System.out.println("Response header sent ... ");
             sendFileInChunk(path);
