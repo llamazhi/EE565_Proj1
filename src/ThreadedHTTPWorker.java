@@ -92,7 +92,7 @@ public class ThreadedHTTPWorker extends Thread {
                 String path = "src/Content/" + relativeURL;
                 System.out.println("Current file path: " + path);
                 File f = new File(path);
-
+                long fileSize = f.length();
                 String MIMEType = categorizeFile(path);
 //                System.out.println(MIMEType);
 
@@ -112,12 +112,12 @@ public class ThreadedHTTPWorker extends Thread {
                             end = Integer.parseInt(endNum);
                         }
                     }
-                    sendParitialContent(MIMEType, start, end, f);
-                    System.out.println("Partial content request detected");
+                    sendPartialContent(MIMEType, start, end, f, fileSize);
+//                    System.out.println("Partial content request detected");
                 }
                 else {
-                    sendFullContent(MIMEType, path);
-                    System.out.println("Full content request detected");
+                    sendFullContent(MIMEType, f, fileSize);
+//                    System.out.println("Full content request detected");
                 }
             }
             else {
@@ -144,18 +144,19 @@ public class ThreadedHTTPWorker extends Thread {
         }
     }
 
-    private void sendParitialContent(String MIMEType, int rangeStart, int rangeEnd, File f) {
+    private void sendPartialContent(String MIMEType, int rangeStart, int rangeEnd, File f, long fileSize) {
         try {
             String date = getDateInfo();
-            long fileSize = f.length();
+//            long fileSize = f.length();
             int actualLength = rangeEnd - rangeStart + 1;
-            String partialResonse = "HTTP/1.1 206 Partial Content" + this.CRLF +
+            String partialResponse = "HTTP/1.1 206 Partial Content" + this.CRLF +
                                 "Content-Type: " + MIMEType + this.CRLF +
                                 "Content-Length: " + actualLength + this.CRLF +
                                 "Date: " + date + this.CRLF +
                                 "Content-Range: bytes " + rangeStart + "-" + rangeEnd + "/" + fileSize + this.CRLF +
+                                "Connection: Keep-Alive" + this.CRLF +
                                 this.CRLF;
-            this.outputStream.writeBytes(partialResonse);
+            this.outputStream.writeBytes(partialResponse);
             sendPartialFile(f, rangeStart, rangeEnd);
 
 
@@ -177,20 +178,38 @@ public class ThreadedHTTPWorker extends Thread {
         }
     }
 
-    private void sendFullContent(String MIMEType, String path) {
+    private void sendFullContent(String MIMEType, File f, long fileSize) {
         try {
             String date = getDateInfo();
             String dateInfo = getDateInfo();
+            String messageLength = "";
+            boolean useChunk = false;
+            if (fileSize < 1000 * 1024) { // 1MByte
+                messageLength = "Content-Length: " + fileSize;
+                useChunk = false;
+            }
+            else {
+                messageLength = "Transfer-Encoding: chunked";
+                useChunk = true;
+            }
             String response = "HTTP/1.1 200 OK" + this.CRLF +
                     "Content-Type: " + MIMEType + this.CRLF +
-                    "Transfer-Encoding: chunked" + this.CRLF +
+                    messageLength + this.CRLF +
+//                    "Transfer-Encoding: chunked" + this.CRLF +
                     "Date: " + date + this.CRLF +
                     "Last-Modified: " + dateInfo + " GMT" + this.CRLF +
+                    "Connection: Keep-Alive" + this.CRLF +
                     this.CRLF;
 //            System.out.println(response);
             this.outputStream.writeBytes(response);
             System.out.println("Response header sent ... ");
-            sendFileInChunk(path);
+            if (useChunk) {
+                sendFileInChunk(f);
+            }
+            else {
+                sendFileNormal(f);
+            }
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -204,14 +223,38 @@ public class ThreadedHTTPWorker extends Thread {
         return formatter.format(cal.getTime());
     }
 
-    private void sendFileInChunk(String path) {
+    private void sendFileNormal(File file) {
         try {
             int bytes = 0;
             // Open the File where located in your pc
-            File file = new File(path);
             FileInputStream fileInputStream
                     = new FileInputStream(file);
-            System.out.println("Begin to send file ... ");
+//            System.out.println("Begin to send file ... ");
+
+            long fileSize = file.length();
+            // Here we  break file into chunks
+            byte[] buffer = new byte[1024];
+            while((bytes = fileInputStream.read(buffer)) != -1) {
+                // Send the file
+                this.outputStream.write(buffer, 0, bytes); // file content
+                this.outputStream.flush(); // flush all the contents into stream
+            }
+            // close the file here
+//            System.out.println("File sent");
+            fileInputStream.close();
+        } catch (IOException e) {
+            System.out.println("File transfer issue");
+            e.printStackTrace();
+        }
+    }
+    private void sendFileInChunk(File file) {
+        try {
+            int bytes = 0;
+            // Open the File where located in your pc
+//            File file = new File(path);
+            FileInputStream fileInputStream
+                    = new FileInputStream(file);
+//            System.out.println("Begin to send file ... ");
 
             // Here we  break file into chunks
             byte[] buffer = new byte[1024];
@@ -230,7 +273,7 @@ public class ThreadedHTTPWorker extends Thread {
             this.outputStream.writeBytes(this.CRLF);
 
             // close the file here
-            System.out.println("File sent");
+//            System.out.println("File sent");
             fileInputStream.close();
         } catch (IOException e) {
             System.out.println("File transfer issue");
