@@ -6,6 +6,7 @@ public class MainHTTPServer {
     public static void main(String[] args) {
         ServerSocket server = null;
         int port = 8080;
+        port = Integer.parseInt(args[0]);
         try {
             server = new ServerSocket(port);
             System.out.println("Server started, listening on: " + port);
