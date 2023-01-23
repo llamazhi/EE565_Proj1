@@ -147,7 +147,6 @@ public class ThreadedHTTPWorker extends Thread {
     private void sendPartialContent(String MIMEType, int rangeStart, int rangeEnd, File f, long fileSize) {
         try {
             String date = getDateInfo();
-//            long fileSize = f.length();
             int actualLength = rangeEnd - rangeStart + 1;
             String partialResponse = "HTTP/1.1 206 Partial Content" + this.CRLF +
                                 "Content-Type: " + MIMEType + this.CRLF +
@@ -182,21 +181,10 @@ public class ThreadedHTTPWorker extends Thread {
     private void sendFullContent(String MIMEType, File f, long fileSize) {
         try {
             String date = getDateInfo();
-//            String dateInfo = getDateInfo();
-            String messageLength = "";
-            boolean useChunk = false;
-            if (fileSize < 1000 * 1024) { // 1MByte
-                messageLength = "Content-Length: " + fileSize;
-                useChunk = false;
-            }
-            else {
-                messageLength = "Transfer-Encoding: chunked";
-                useChunk = true;
-            }
             DateFormat formatter = new SimpleDateFormat("EEE, dd MMM yyyy hh:mm:ss");
             String response = "HTTP/1.1 200 OK" + this.CRLF +
                     "Content-Type: " + MIMEType + this.CRLF +
-                    messageLength + this.CRLF +
+                    "Content-Length: " + fileSize + this.CRLF +
                     "Date: " + date + " GMT" + this.CRLF +
                     "Last-Modified: " + formatter.format(f.lastModified()) + " GMT" + this.CRLF +
                     "Connection: Keep-Alive" + this.CRLF +
@@ -204,12 +192,7 @@ public class ThreadedHTTPWorker extends Thread {
 //            System.out.println(response);
             this.outputStream.writeBytes(response);
             System.out.println("Response header sent ... ");
-            if (useChunk) {
-                sendFileInChunk(f);
-            }
-            else {
-                sendFileNormal(f);
-            }
+            sendFileNormal(f);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -227,31 +210,7 @@ public class ThreadedHTTPWorker extends Thread {
     private void sendFileNormal(File file) {
         try {
             int bytes = 0;
-            // Open the File where located in your pc
-            FileInputStream fileInputStream
-                    = new FileInputStream(file);
-//            System.out.println("Begin to send file ... ");
-
-            long fileSize = file.length();
-            // Here we  break file into chunks
-            byte[] buffer = new byte[1024];
-            while((bytes = fileInputStream.read(buffer)) != -1) {
-                // Send the file
-                this.outputStream.write(buffer, 0, bytes); // file content
-                this.outputStream.flush(); // flush all the contents into stream
-            }
-            // close the file here
-//            System.out.println("File sent");
-            fileInputStream.close();
-        } catch (IOException e) {
-            System.out.println("File transfer issue");
-            e.printStackTrace();
-        }
-    }
-    private void sendFileInChunk(File file) {
-        try {
-            int bytes = 0;
-            // Open the File where located in your pc
+            // Open the File
             FileInputStream fileInputStream
                     = new FileInputStream(file);
 //            System.out.println("Begin to send file ... ");
@@ -259,19 +218,10 @@ public class ThreadedHTTPWorker extends Thread {
             // Here we  break file into chunks
             byte[] buffer = new byte[1024];
             while((bytes = fileInputStream.read(buffer)) != -1) {
-//                System.out.println(bytes);
-                String chunkSize =  Integer.toHexString(bytes); // get Hex string of chunk size
-//                System.out.println(chunkSize);
-                this.outputStream.writeBytes(chunkSize + this.CRLF); // chunk size\r\n
-
                 // Send the file
                 this.outputStream.write(buffer, 0, bytes); // file content
                 this.outputStream.flush(); // flush all the contents into stream
-                this.outputStream.writeBytes(this.CRLF);
             }
-            this.outputStream.writeBytes("0" + this.CRLF);
-            this.outputStream.writeBytes(this.CRLF);
-
             // close the file here
 //            System.out.println("File sent");
             fileInputStream.close();
