@@ -153,7 +153,7 @@ public class ThreadedHTTPWorker extends Thread {
                                 "Content-Length: " + actualLength + this.CRLF +
                                 "Date: " + date + " GMT" + this.CRLF +
                                 "Content-Range: bytes " + rangeStart + "-" + rangeEnd + "/" + fileSize + this.CRLF +
-                                "Connection: Keep-Alive" + this.CRLF +
+                                "Connection: close" + this.CRLF +
                                 this.CRLF;
             this.outputStream.writeBytes(partialResponse);
             sendPartialFile(f, rangeStart, rangeEnd);
@@ -187,7 +187,7 @@ public class ThreadedHTTPWorker extends Thread {
                     "Content-Length: " + fileSize + this.CRLF +
                     "Date: " + date + " GMT" + this.CRLF +
                     "Last-Modified: " + formatter.format(f.lastModified()) + " GMT" + this.CRLF +
-                    "Connection: Keep-Alive" + this.CRLF +
+                    "Connection: close" + this.CRLF +
                     this.CRLF;
 //            System.out.println(response);
             this.outputStream.writeBytes(response);
