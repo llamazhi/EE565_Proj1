@@ -152,7 +152,7 @@ public class ThreadedHTTPWorker extends Thread {
             String partialResponse = "HTTP/1.1 206 Partial Content" + this.CRLF +
                                 "Content-Type: " + MIMEType + this.CRLF +
                                 "Content-Length: " + actualLength + this.CRLF +
-                                "Date: " + date + this.CRLF +
+                                "Date: " + date + " GMT" + this.CRLF +
                                 "Content-Range: bytes " + rangeStart + "-" + rangeEnd + "/" + fileSize + this.CRLF +
                                 "Connection: Keep-Alive" + this.CRLF +
                                 this.CRLF;
@@ -173,6 +173,7 @@ public class ThreadedHTTPWorker extends Thread {
             byte[] buffer = new byte[readLen];
             fileInputStream.read(buffer, rangeStart, readLen);
             this.outputStream.write(buffer, 0, readLen);
+            fileInputStream.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -181,7 +182,7 @@ public class ThreadedHTTPWorker extends Thread {
     private void sendFullContent(String MIMEType, File f, long fileSize) {
         try {
             String date = getDateInfo();
-            String dateInfo = getDateInfo();
+//            String dateInfo = getDateInfo();
             String messageLength = "";
             boolean useChunk = false;
             if (fileSize < 1000 * 1024) { // 1MByte
@@ -192,12 +193,12 @@ public class ThreadedHTTPWorker extends Thread {
                 messageLength = "Transfer-Encoding: chunked";
                 useChunk = true;
             }
+            DateFormat formatter = new SimpleDateFormat("EEE, dd MMM yyyy hh:mm:ss");
             String response = "HTTP/1.1 200 OK" + this.CRLF +
                     "Content-Type: " + MIMEType + this.CRLF +
                     messageLength + this.CRLF +
-//                    "Transfer-Encoding: chunked" + this.CRLF +
-                    "Date: " + date + this.CRLF +
-                    "Last-Modified: " + dateInfo + " GMT" + this.CRLF +
+                    "Date: " + date + " GMT" + this.CRLF +
+                    "Last-Modified: " + formatter.format(f.lastModified()) + " GMT" + this.CRLF +
                     "Connection: Keep-Alive" + this.CRLF +
                     this.CRLF;
 //            System.out.println(response);
@@ -251,7 +252,6 @@ public class ThreadedHTTPWorker extends Thread {
         try {
             int bytes = 0;
             // Open the File where located in your pc
-//            File file = new File(path);
             FileInputStream fileInputStream
                     = new FileInputStream(file);
 //            System.out.println("Begin to send file ... ");
